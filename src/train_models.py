@@ -1,10 +1,10 @@
-"""Train and compare >= 5 models (different algorithm families).
+"""Train and compare the five selected model families.
 
-    python -m src.train_models                # all models
-    python -m src.train_models --only rf hgb  # subset
+    python -m src.train_models                     # all five models
+    python -m src.train_models --only hgb          # one model
 
 Protocol (Models_and_Training_Guidelines §4):
-  * fit + GroupKFold CV on the 80 training trips (group = trip, so no trip leaks across folds)
+  * fit + GroupKFold CV on training trips (group = trip, so no trip leaks across folds)
   * compare on the 10 student-testing trips
   * log configs, seed, train/inference time, all metrics -> results/
 """
@@ -24,11 +24,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import ConfusionMatrixDisplay, confusion_matrix
 from sklearn.model_selection import GroupKFold
 from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.tree import DecisionTreeClassifier
 
 from .config import ARTIFACTS, N_FOLDS, PROCESSED, RESULTS, SEED
 from .data_loader import find_trips, load_trip
@@ -38,20 +36,12 @@ from .metrics import (candidate_metrics, candidate_miss_rate, route_continuity,
 from .network import build_network
 
 
-# KNN predicts by searching the whole training set -> cap its training rows (documented in report)
-SUBSAMPLE = {"knn": 40_000}
-
-
 def get_models():
     """name -> (family, estimator). Every config here goes into the report table."""
-    m = {
+    return {
         "logreg": ("Linear", make_pipeline(StandardScaler(), LogisticRegression(
             C=1.0, class_weight="balanced", max_iter=2000))),
         "gnb": ("Probabilistic", make_pipeline(StandardScaler(), GaussianNB())),
-        "knn": ("Instance-based", make_pipeline(StandardScaler(), KNeighborsClassifier(
-            n_neighbors=25, weights="distance", n_jobs=-1))),
-        "dtree": ("Tree", DecisionTreeClassifier(max_depth=10, min_samples_leaf=20,
-                                                 class_weight="balanced", random_state=SEED)),
         "rf": ("Ensemble (bagging)", RandomForestClassifier(
             n_estimators=150, min_samples_leaf=5, class_weight="balanced_subsample",
             n_jobs=-1, random_state=SEED)),
@@ -61,20 +51,6 @@ def get_models():
             hidden_layer_sizes=(64, 32), alpha=1e-4, early_stopping=True,
             max_iter=200, random_state=SEED))),
     }
-    try:
-        from lightgbm import LGBMClassifier
-        m["lgbm"] = ("Boosting", LGBMClassifier(n_estimators=400, learning_rate=0.05,
-                                                num_leaves=31, random_state=SEED, verbose=-1))
-    except ImportError:
-        pass
-    return m
-
-
-def _sub(name, idx):
-    n = SUBSAMPLE.get(name)
-    if n and len(idx) > n:
-        return np.sort(np.random.default_rng(SEED).choice(idx, n, replace=False))
-    return idx
 
 
 def load_partition(part):
@@ -107,6 +83,13 @@ def evaluate(model, C, P, nets=None):
 
 
 def main(only=None):
+    models = get_models()
+    if only:
+        unknown = sorted(set(only) - models.keys())
+        if unknown:
+            raise ValueError(f"Unknown model(s): {', '.join(unknown)}. Choose from: "
+                             f"{', '.join(models)}")
+
     Ctr, Ptr = load_partition("train")
     Cst, Pst = load_partition("student_test")
     index = find_trips()
@@ -116,7 +99,6 @@ def main(only=None):
     gkf = GroupKFold(n_splits=N_FOLDS)
 
     rows, fold_rows = [], []
-    models = get_models()
     (RESULTS / "models").mkdir(exist_ok=True)
     for name, (family, est) in models.items():
         if only and name not in only:
@@ -125,15 +107,13 @@ def main(only=None):
         # ---- group-aware CV on training trips
         for f, (tr, va) in enumerate(gkf.split(X, y, groups)):
             m = clone(est)
-            tr = _sub(name, tr)
             m.fit(X[tr], y[tr])
             r, _ = evaluate(m, Ctr.iloc[va], Ptr[Ptr.trip_id.isin(set(groups[va]))])
             fold_rows.append({"model": name, "fold": f, **r})
             print(f"  fold {f}: macroF1={r['macro_f1']:.4f} top1={r['top1_acc']:.4f}")
         # ---- refit on all training trips, test on student_test
         m = clone(est)
-        full = _sub(name, np.arange(len(y)))
-        t0 = time.perf_counter(); m.fit(X[full], y[full]); train_s = time.perf_counter() - t0
+        t0 = time.perf_counter(); m.fit(X, y); train_s = time.perf_counter() - t0
         r, prob = evaluate(m, Cst, Pst, nets_st)
         fr = pd.DataFrame([x for x in fold_rows if x["model"] == name])
         rows.append({"model": name, "family": family, "config": str(est.get_params(deep=False))[:300],

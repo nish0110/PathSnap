@@ -9,13 +9,14 @@ Matches noisy GPS points to road-network arcs. A candidate classifier scores eac
 4. **HMM/Viterbi**: states = candidates, emission = classifier log-probability, transition = `-|network distance − straight distance| / β` (`src/hmm.py`).
 5. **Serving**: `api/main.py` loads `artifacts/model.joblib` + `artifacts/hmm_params.json`; the reference route is used only server-side for scoring.
 
+The five classifiers compared are logistic regression (`logreg`), Gaussian Naive Bayes (`gnb`), random forest (`rf`), histogram gradient boosting (`hgb`), and an MLP neural network (`mlp`).
+
 ## Setup
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
-Copy `Student folder/train` and `Student folder/student_test` into `data/raw/` so you get `data/raw/train/00000001/00000001.track` etc. The raw data is not committed (see .gitignore).
-`data/splits.json` (committed) lists the 80 train + 10 student-test trip ids. The evaluator trips are added on laptop 1 at demo time (put them in `data/raw/eval_test/` and add their ids to `eval_test` in splits.json).
+The repository includes the raw training and student-test trips under `data/raw/`. `data/splits.json` (committed) lists the 80 train + 10 student-test trip ids. Evaluator trips are added on laptop 1 at demo time (put them in `data/raw/eval_test/` and add their ids to `eval_test` in splits.json).
 
 ## Data facts found in EDA (results/eda, results/trip_quality.csv)
 - 80 train / 10 student-test trips, 1 Hz GPS (94% of steps exactly 1 s), no missing values, timestamps sorted
@@ -24,12 +25,15 @@ Copy `Student folder/train` and `Student folder/student_test` into `data/raw/` s
 - Largest time gap 153,064 s (one trip); 49 trips have gaps > 5 s → HMM gap handling
 - Candidate radius 50 m, top-8 → candidate miss rate 1.8% train / 0.4% student test
 
+The EDA counts missing GPS-track cells but does not impute values. The feature builder drops any track row with a missing field before generating features; the current 90-trip dataset has no missing GPS-track cells.
+
 ## Run order
 ```bash
 python -m src.eda                              # results/eda/*
 python -m src.visualize --trip <TRIP_ID>       # results/maps/<TRIP_ID>.html
 python -m src.build_dataset                    # data/processed/*.parquet
 python -m src.train_models                     # results/model_comparison.csv/png, cm_*.png
+python -m src.train_models --only hgb          # train just histogram gradient boosting
 python -m src.bayes_opt --model hgb --trials 40   # artifacts/model.joblib, results/bayes_*
 python -m src.tune_hmm --max-trips 30          # artifacts/hmm_params.json, results/hmm_*
 python -m src.visualize --trip <TRIP_ID> --predict
@@ -41,6 +45,10 @@ python -m src.visualize --trip <TRIP_ID> --predict
 uvicorn api.main:app --host 0.0.0.0 --port 8000
 # IP: ipconfig (Windows) / ip a (Linux) / ipconfig getifaddr en0 (mac). Allow port 8000 in the firewall.
 ```
+If Windows Application Control blocks Python DLLs (pandas/scikit-learn), run everything in WSL (Ubuntu): `python3 -m venv ~/psvenv && ~/psvenv/bin/pip install -r requirements.txt`, then run the same commands from `/mnt/d/...`. WSL2 uses NAT, so for laptop 2 to reach it either enable mirrored networking (`networkingMode=mirrored` in `%UserProfile%\.wslconfig`, then `wsl --shutdown`) or forward the port: `netsh interface portproxy add v4tov4 listenport=8000 listenaddress=0.0.0.0 connectport=8000 connectaddress=<WSL_IP>` (admin) plus a firewall rule for 8000.
+
+Local testing before the evaluator trips exist: `PATHSNAP_SERVE_SPLIT=student_test uvicorn api.main:app --port 8000` (prints a DEV MODE warning; never use for the demo).
+
 **Laptop 2 (UI)** – needs only `ui/` and `pip install streamlit streamlit-folium folium requests`:
 ```bash
 API_URL=http://<LAPTOP1_IP>:8000 streamlit run ui/app.py   # Windows: set API_URL=... then streamlit run ui/app.py

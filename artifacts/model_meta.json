@@ -1,0 +1,28 @@
+{
+  "model": "hgb",
+  "best_params": {
+    "learning_rate": 0.018227726925281677,
+    "max_iter": 235,
+    "max_leaf_nodes": 35,
+    "min_samples_leaf": 14,
+    "l2_regularization": 0.002034829192302879
+  },
+  "best_cv_top1": 0.838265790479728,
+  "n_trials": 12,
+  "optimisation_seconds": 896.2374110221863,
+  "features": [
+    "dist",
+    "dist_rank",
+    "dist_minus_min",
+    "dist_ratio",
+    "n_cand",
+    "heading_diff",
+    "speed",
+    "arc_len",
+    "frac",
+    "dt_prev",
+    "dt_next",
+    "prev_support",
+    "next_support"
+  ]
+}

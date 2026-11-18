@@ -32,7 +32,13 @@ app = FastAPI(title="PathSnap API")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 INDEX = find_trips()
-EVAL_TRIPS = load_splits(INDEX).get("eval_test", [])
+import os  # noqa: E402
+_SPLITS = load_splits(INDEX)
+# Demo: serves "eval_test". For local testing only, PATHSNAP_SERVE_SPLIT=student_test serves those trips instead.
+_SERVE = os.environ.get("PATHSNAP_SERVE_SPLIT", "eval_test")
+EVAL_TRIPS = _SPLITS.get(_SERVE, [])
+if _SERVE != "eval_test":
+    logging.getLogger("pathsnap").warning("DEV MODE: serving '%s' trips instead of eval_test", _SERVE)
 PIPE = PathSnapPipeline()
 log.info("loaded model, %d evaluation trips available", len(EVAL_TRIPS))
 

@@ -29,12 +29,15 @@ from .features import FEATURES
 from .train_models import evaluate, get_models, load_partition
 
 
+SEARCH_FRAC = 0.15
+
+
 def space(name, trial):
     """Search spaces – JUSTIFY each range in the report."""
     if name == "hgb":
         return HistGradientBoostingClassifier(
             learning_rate=trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-            max_iter=trial.suggest_int("max_iter", 100, 800),
+            max_iter=trial.suggest_int("max_iter", 100, 400),
             max_leaf_nodes=trial.suggest_int("max_leaf_nodes", 8, 128, log=True),
             min_samples_leaf=trial.suggest_int("min_samples_leaf", 5, 200, log=True),
             l2_regularization=trial.suggest_float("l2_regularization", 1e-6, 10, log=True),
@@ -53,17 +56,6 @@ def space(name, trial):
             hidden_layer_sizes=(w,) * d, alpha=trial.suggest_float("alpha", 1e-6, 1e-1, log=True),
             learning_rate_init=trial.suggest_float("lr", 1e-4, 1e-2, log=True),
             early_stopping=True, max_iter=300, random_state=SEED))
-    if name == "lgbm":
-        from lightgbm import LGBMClassifier
-        return LGBMClassifier(
-            n_estimators=trial.suggest_int("n_estimators", 100, 1000),
-            learning_rate=trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
-            num_leaves=trial.suggest_int("num_leaves", 8, 128, log=True),
-            min_child_samples=trial.suggest_int("min_child_samples", 5, 200, log=True),
-            subsample=trial.suggest_float("subsample", 0.5, 1.0), subsample_freq=1,
-            colsample_bytree=trial.suggest_float("colsample_bytree", 0.5, 1.0),
-            reg_lambda=trial.suggest_float("reg_lambda", 1e-6, 10, log=True),
-            random_state=SEED, verbose=-1)
     raise ValueError(f"No search space for {name}")
 
 
@@ -77,7 +69,10 @@ def main(name, n_trials):
         model = space(name, trial)
         scores = []
         for tr, va in folds:
-            m = clone(model).fit(X[tr], y[tr])
+            # Speed: tune on a fixed random 15% of the TRAINING-fold rows (1M rows -> 7 min/trial otherwise).
+            # Validation folds stay complete; the final model is refit on all rows.
+            sub = np.random.default_rng(SEED).choice(tr, int(len(tr) * SEARCH_FRAC), replace=False)
+            m = clone(model).fit(X[sub], y[sub])
             r, _ = evaluate(m, Ctr.iloc[va], Ptr[Ptr.trip_id.isin(set(g[va]))])
             scores.append(r["top1_acc"])
             trial.set_user_attr("macro_f1", r["macro_f1"])
@@ -85,11 +80,21 @@ def main(name, n_trials):
 
     study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(seed=SEED))
     t0 = time.time()
-    study.optimize(objective, n_trials=n_trials, show_progress_bar=False)
+    def progress(st, tr):
+        print(f"[bayes] trial {tr.number + 1}/{n_trials} cv_top1={tr.value:.4f} "
+              f"best={st.best_value:.4f} elapsed={time.time() - t0:.0f}s", flush=True)
+
+    study.optimize(objective, n_trials=n_trials, show_progress_bar=False, callbacks=[progress])
     opt_s = time.time() - t0
     study.trials_dataframe().to_csv(RESULTS / f"bayes_trials_{name}.csv", index=False)
 
     tuned = space(name, optuna.trial.FixedTrial(study.best_params)).fit(X, y)
+    joblib.dump(tuned, ARTIFACTS / "model.joblib")
+    json.dump({"model": name, "best_params": study.best_params, "best_cv_top1": study.best_value,
+               "n_trials": n_trials, "search_row_fraction": SEARCH_FRAC,
+               "optimisation_seconds": opt_s, "features": FEATURES},
+              open(ARTIFACTS / "model_meta.json", "w"), indent=2)
+    print("[bayes] saved artifacts/model.joblib", flush=True)
     untuned = clone(get_models()[name][1]).fit(X, y)
     rows = []
     for label, m in (("untuned", untuned), ("tuned", tuned)):
