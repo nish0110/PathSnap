@@ -1,0 +1,50 @@
+[I 2026-11-18 11:47:54,868] A new study created in memory with name: no-name-b54e266d-1f55-4742-8766-d37ade4c0354
+[I 2026-11-18 11:51:24,229] Trial 0 finished with value: 0.8373248503032901 and parameters: {'learning_rate': 0.03574712922600244, 'max_iter': 386, 'max_leaf_nodes': 60, 'min_samples_leaf': 44, 'l2_regularization': 1.2363188277052228e-05}. Best is trial 0 with value: 0.8373248503032901.
+[bayes] trial 1/12 cv_top1=0.8373 best=0.8373 elapsed=209s
+[I 2026-11-18 11:52:31,303] Trial 1 finished with value: 0.8369090561252965 and parameters: {'learning_rate': 0.01699897838270077, 'max_iter': 117, 'max_leaf_nodes': 88, 'min_samples_leaf': 44, 'l2_regularization': 0.090470719575684}. Best is trial 0 with value: 0.8373248503032901.
+[bayes] trial 2/12 cv_top1=0.8369 best=0.8373 elapsed=276s
+[I 2026-11-18 11:54:23,998] Trial 2 finished with value: 0.8376767980607536 and parameters: {'learning_rate': 0.010725209743171997, 'max_iter': 391, 'max_leaf_nodes': 80, 'min_samples_leaf': 10, 'l2_regularization': 1.8740223688836324e-05}. Best is trial 2 with value: 0.8376767980607536.
+[bayes] trial 3/12 cv_top1=0.8377 best=0.8377 elapsed=389s
+[I 2026-11-18 11:55:04,754] Trial 3 finished with value: 0.8378406359110162 and parameters: {'learning_rate': 0.018659959624904916, 'max_iter': 191, 'max_leaf_nodes': 33, 'min_samples_leaf': 23, 'l2_regularization': 0.00010929592787219404}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 4/12 cv_top1=0.8378 best=0.8378 elapsed=430s
+[I 2026-11-18 11:55:27,934] Trial 4 finished with value: 0.8376484119321667 and parameters: {'learning_rate': 0.08012737503998542, 'max_iter': 141, 'max_leaf_nodes': 17, 'min_samples_leaf': 18, 'l2_regularization': 0.0015577217702693043}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 5/12 cv_top1=0.8376 best=0.8378 elapsed=453s
+[I 2026-11-18 11:55:47,492] Trial 5 finished with value: 0.8374824311743492 and parameters: {'learning_rate': 0.14447746112718687, 'max_iter': 160, 'max_leaf_nodes': 32, 'min_samples_leaf': 43, 'l2_regularization': 2.1142332035497158e-06}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 6/12 cv_top1=0.8375 best=0.8378 elapsed=473s
+[I 2026-11-18 11:56:04,900] Trial 6 finished with value: 0.8374293848916903 and parameters: {'learning_rate': 0.07896186801026692, 'max_iter': 151, 'max_leaf_nodes': 9, 'min_samples_leaf': 165, 'l2_regularization': 5.746775499181867}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 7/12 cv_top1=0.8374 best=0.8378 elapsed=490s
+[I 2026-11-18 11:57:13,139] Trial 7 finished with value: 0.8360553669008665 and parameters: {'learning_rate': 0.1563510870813346, 'max_iter': 191, 'max_leaf_nodes': 10, 'min_samples_leaf': 60, 'l2_regularization': 0.0012052231254145623}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 8/12 cv_top1=0.8361 best=0.8378 elapsed=558s
+[I 2026-11-18 11:59:08,165] Trial 8 finished with value: 0.8358024445612251 and parameters: {'learning_rate': 0.015144860262751412, 'max_iter': 249, 'max_leaf_nodes': 8, 'min_samples_leaf': 142, 'l2_regularization': 6.478282331897332e-05}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 9/12 cv_top1=0.8358 best=0.8378 elapsed=673s
+[I 2026-11-18 12:00:00,087] Trial 9 finished with value: 0.8376859423659264 and parameters: {'learning_rate': 0.09519754482692679, 'max_iter': 193, 'max_leaf_nodes': 33, 'min_samples_leaf': 36, 'l2_regularization': 1.967801053211497e-05}. Best is trial 3 with value: 0.8378406359110162.
+[bayes] trial 10/12 cv_top1=0.8377 best=0.8378 elapsed=725s
+[I 2026-11-18 12:01:31,742] Trial 10 finished with value: 0.838265790479728 and parameters: {'learning_rate': 0.018227726925281677, 'max_iter': 235, 'max_leaf_nodes': 35, 'min_samples_leaf': 14, 'l2_regularization': 0.002034829192302879}. Best is trial 10 with value: 0.838265790479728.
+[bayes] trial 11/12 cv_top1=0.8383 best=0.8383 elapsed=817s
+[I 2026-11-18 12:02:51,104] Trial 11 finished with value: 0.8374189452647698 and parameters: {'learning_rate': 0.013506073111306572, 'max_iter': 236, 'max_leaf_nodes': 49, 'min_samples_leaf': 11, 'l2_regularization': 0.01054134128091633}. Best is trial 10 with value: 0.838265790479728.
+[bayes] trial 12/12 cv_top1=0.8374 best=0.8383 elapsed=896s
+[bayes] saved artifacts/model.joblib
+variant  cv_macro_f1  cv_top1  st_accuracy  st_precision  st_recall  st_macro_f1  st_log_loss  st_top1_acc  st_infer_ms_per_point
+untuned     0.903751 0.837929     0.950824      0.857673   0.847649     0.911560     0.122003     0.853914               0.055970
+  tuned     0.904209 0.838869     0.951273      0.861305   0.845868     0.912146     0.120879     0.855063               0.019364
+tuning HMM on 20 training trips (OOF probabilities)
+{'beta': 5, 'w_emit': 0.5} 0.9089
+{'beta': 5, 'w_emit': 1.0} 0.9038
+{'beta': 5, 'w_emit': 2.0} 0.9027
+{'beta': 10, 'w_emit': 0.5} 0.9038
+{'beta': 10, 'w_emit': 1.0} 0.9027
+{'beta': 10, 'w_emit': 2.0} 0.8987
+{'beta': 20, 'w_emit': 0.5} 0.9027
+{'beta': 20, 'w_emit': 1.0} 0.8987
+{'beta': 20, 'w_emit': 2.0} 0.8935
+{'beta': 40, 'w_emit': 0.5} 0.8987
+{'beta': 40, 'w_emit': 1.0} 0.8935
+{'beta': 40, 'w_emit': 2.0} 0.8905
+{'beta': 80, 'w_emit': 0.5} 0.8935
+{'beta': 80, 'w_emit': 1.0} 0.8905
+{'beta': 80, 'w_emit': 2.0} 0.8858
+best params: {'beta': 5.0, 'w_emit': 0.5}
+                top1_acc  route_continuity  route_f1  breaks
+method                                                      
+classifier      0.871049          0.948052  0.846564     0.0
+classifier+hmm  0.947041          0.979325  0.930511     1.4
