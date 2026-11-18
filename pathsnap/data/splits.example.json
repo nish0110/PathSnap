@@ -1,0 +1,5 @@
+{
+  "train": ["trip_id_1", "trip_id_2"],
+  "student_test": ["..."],
+  "eval_test": ["..."]
+}

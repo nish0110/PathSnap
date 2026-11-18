@@ -1,0 +1,22 @@
+{
+  "model": "logreg",
+  "features": [
+    "dist",
+    "dist_rank",
+    "dist_minus_min",
+    "dist_ratio",
+    "n_cand",
+    "heading_diff",
+    "speed",
+    "arc_len",
+    "frac",
+    "dt_prev",
+    "dt_next",
+    "prev_support",
+    "next_support"
+  ],
+  "cv_macro_f1": 0.830603,
+  "student_test_top1": 0.83904,
+  "student_test_macro_f1": 0.834884,
+  "seed": 42
+}
