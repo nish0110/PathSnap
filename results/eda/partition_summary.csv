@@ -1,0 +1,3 @@
+partition,trips,points,mean_points,mean_len_km
+student_test,10,19160,1916.0,29.69678162623149
+train,80,208417,2605.2125,37.23018857364184
